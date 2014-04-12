@@ -15,58 +15,54 @@
 
 const Status UT_Load(const string & relation, const string & fileName)
 {
-  Status status;
-  RelDesc rd;
-  AttrDesc *attrs;
-  int attrCnt, i;
-  InsertFileScan * iFile;
-  int width = 0;
-  int records = 0;
-  if (relation.empty() || fileName.empty() || relation == string(RELCATNAME)
-      || relation == string(ATTRCATNAME))
-    return BADCATPARM;
+	Status status;
+	RelDesc rd;
+	AttrDesc *attrs;
+	int attrCnt, i;
+	InsertFileScan * iFile;
+	int width = 0;
+	int records = 0;
+	if (relation.empty() || fileName.empty() || relation == string(RELCATNAME)
+			|| relation == string(ATTRCATNAME))
+		return BADCATPARM;
 
-  // open Unix data file
+	// open Unix data file
 
-  int fd;
-  if ((fd = open(fileName.c_str(), O_RDONLY, 0)) < 0)
-    return UNIXERR;
+	int fd;
+	if ((fd = open(fileName.c_str(), O_RDONLY, 0)) < 0)
+		return UNIXERR;
 
-  // get relation data
+	// get relation data
 
+	//get the list of AttrDesc for the given relation
+	if((status = attrCat->getRelInfo(relation, attrCnt, attrs)) != OK) return status;
+	for(i = 0; i < attrCnt; i++) {
+		width += attrs->attrLen;
+		attrs += sizeof(AttrDesc);
+	}
 
-
-
-  // start insertFileScan on relation
-
-
-
-
-
-
-
-
-  // allocate buffer to hold record read from unix file
-  char *record;
-  if (!(record = new char [width])) return INSUFMEM;
-
-  int nbytes;
-  Record rec;
-
-  // read next input record from Unix file and insert it into relation
-  while((nbytes = read(fd, record, width)) == width) {
-    RID rid;
-    rec.data = record;
-    rec.length = width;
-    if ((status = iFile->insertRecord(rec, rid)) != OK) return status;
-    records++;
-  }
-
-  // close heap file and unix file
-  if (close(fd) < 0) return UNIXERR;
+	// start insertFileScan on relation
+	iFile = new InsertFileScan(fileName, status);
 
 
+	// allocate buffer to hold record read from unix file
+	char *record;
+	if (!(record = new char [width])) return INSUFMEM;
 
+	int nbytes;
+	Record rec;
 
+	// read next input record from Unix file and insert it into relation
+	while((nbytes = read(fd, record, width)) == width) {
+		RID rid;
+		rec.data = record;
+		rec.length = width;
+		if ((status = iFile->insertRecord(rec, rid)) != OK) return status;
+		records++;
+	}
+
+	// close heap file and unix file
+	if (close(fd) < 0) return UNIXERR;
+	return OK;
 }
 

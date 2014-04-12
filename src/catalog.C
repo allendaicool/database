@@ -22,6 +22,7 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
 	{
 		return status;
 	}
+
 	tmpPtr->startScan(0, relation.length()+1,STRING,relation.c_str(),EQ);
 	if((status =tmpPtr->scanNext(rid))!=OK)
 	{
@@ -121,7 +122,7 @@ RelCatalog::~RelCatalog()
 
 
 AttrCatalog::AttrCatalog(Status &status) :
-																	 HeapFile(ATTRCATNAME, status)
+																			 HeapFile(ATTRCATNAME, status)
 {
 	// nothing should be needed here
 }
@@ -208,9 +209,18 @@ const Status AttrCatalog::removeInfo(const string & relation,
 	RID rid;
 	AttrDesc record;
 	HeapFileScan*  hfs;
-
+	RelDesc RelDesc;
 	if (relation.empty() || attrName.empty()) return BADCATPARM;
-	hfs = new HeapFileScan(ATTRCATNAME,status);
+
+	//status = relCat->getInfo(relation,RelDesc);
+	//if(status!=OK)
+	//{
+		//return status;
+	//}
+	//RelDesc.attrCnt--;
+
+	//	HeapFileScan*  relationScan = new HeapFileScan(RELCATNAME);
+
 	if(status!=OK)
 	{
 		return status;
@@ -239,6 +249,7 @@ const Status AttrCatalog::removeInfo(const string & relation,
 			return OK;
 		}
 	}
+
 	if(status == FILEEOF)
 	{
 		status = hfs->endScan();
